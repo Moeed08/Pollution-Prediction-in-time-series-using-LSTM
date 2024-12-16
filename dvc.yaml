@@ -1,0 +1,50 @@
+stages:
+  preprocess:
+    cmd: python main.py --step preprocess --input data/air_pollution_data.csv --output preprocessed_data.pkl
+    deps:
+      - main.py
+      - src/preprocessing.py
+      - data/air_pollution_data.csv
+    outs:
+      - preprocessed_data.pkl
+
+  train:
+    cmd: python main.py --step train --input preprocessed_data.pkl --model lstm_model.h5 --scaler scaler.pkl
+    deps:
+      - main.py
+      - src/train.py
+      - preprocessed_data.pkl
+    outs:
+      - lstm_model.h5
+      - scaler.pkl
+    metrics:
+      - metrics.json
+
+  test:
+    cmd: python main.py --step test --model lstm_model.h5 --data preprocessed_data.pkl --scaler scaler.pkl --output results.json
+    deps:
+      - main.py
+      - src/test.py
+      - lstm_model.h5
+      - preprocessed_data.pkl
+      - scaler.pkl
+    outs:
+      - results.json
+
+  evaluate:
+    cmd: python main.py --step evaluate --mlruns C:/Users/user1/Desktop/MLOPS_Project/mlruns/0/ --output best_model_artifacts
+    deps:
+      - main.py
+      - bestmodel/bestmodel.py
+      - lstm_model.h5
+      - metrics.json
+    outs:
+      - best_model_artifacts
+
+  deploy:
+    cmd: python main.py --step deploy --model best_model_artifacts --scaler scaler.pkl
+    deps:
+      - main.py
+      - src/deployment.py
+      - best_model_artifacts
+      - scaler.pkl
